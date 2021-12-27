@@ -1,8 +1,6 @@
 <template>
   <div >
     <div id="myChart" :style="{width: '300px', height: '300px'}"></div>
-    <img v-for="url in picUrls" :src="url" style="width:100%;height:100%">
-    <el-button @click="getAllPics" type="primary">获取图片</el-button>
          <el-dialog title="导入源数据库表单信息" :visible.sync="dialogVisible1">
       <el-form ref="importFormRef" :model="importForm"  label-width="130px">
         <el-form-item label="病种kgCode:" prop="kgCode" >
@@ -36,31 +34,123 @@
         </el-form-item>
       </el-form>
     </el-dialog>
-
+    <el-descriptions class="margin-top" title="个人信息" :column="3" :size="size" border>
+      <template slot="extra">
+        <el-button type="primary" size="small" @click.native.prevent="open1">修改邮箱手机号</el-button>
+        <el-button type="primary" size="small" @click.native.prevent="open2">修改密码</el-button>
+      </template>
+      <el-descriptions-item>
+        <template slot="label">
+          <i class="el-icon-user"></i>
+          用户名
+        </template>
+        {{ this.userName }}
+      </el-descriptions-item>
+      <el-descriptions-item>
+        <template slot="label">
+          <i class="el-icon-mobile-phone"></i>
+          手机号
+        </template>
+        {{ this.userPhoneNumber }}
+      </el-descriptions-item>
+      <el-descriptions-item>
+        <template slot="label">
+          <i class="el-icon-s-order"></i>
+          班级
+        </template>
+        {{ this.userClass }}
+      </el-descriptions-item>
+      <el-descriptions-item>
+        <template slot="label">
+          <i class="el-icon-tickets"></i>
+          学号
+        </template>
+        {{this.userId}}
+      </el-descriptions-item>
+      <el-descriptions-item>
+        <template slot="label">
+          <i class="el-icon-office-building"></i>
+          邮箱
+        </template>
+        {{this.userEmail}}
+      </el-descriptions-item>
+    </el-descriptions>
+    <el-dialog title="修改邮箱手机号" :visible.sync="dialogVisible2">
+      <el-form ref="importFormRef" :model="emailImportForm"  label-width="130px">
+        <el-form-item label="邮箱:" prop="newEmail" >
+          <el-input v-model="emailImportForm.newEmail" ></el-input>
+        </el-form-item>
+        <el-form-item label="电话号码:" prop="newPhoneNumber" >
+          <el-input v-model="emailImportForm.newPhoneNumber"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="changePhoneNumber">提交</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+    <el-dialog title="修改密码" :visible.sync="dialogVisible3">
+      <el-form ref="importFormRef" :model="passwordImportForm"  label-width="130px">
+        <el-form-item label="新密码:" prop="password1" >
+          <el-input v-model="passwordImportForm.password1" ></el-input>
+        </el-form-item>
+        <el-form-item label="重复输入新密码:" prop="password2" >
+          <el-input v-model="passwordImportForm.password2"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="changePassword">提交</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import {uploadForm} from '@/api/upload'
-import {getPics} from "@/api/pic"
-
-export default {
+import store from "../../store";
+import {changePassword, updateUserInfo} from "../../api/login";
+  export default {
   name: 'hello',
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
-      dialogVisible1:true,
+      dialogVisible1:false,
+      dialogVisible2:false,
+      dialogVisible3:false,
       importForm:{
       kgCode:'',
       targetUrl:'',
       targetUsername:'',
       targetPassword:'',
       },
+      emailImportForm:{
+        newEmail:'',
+        newPhoneNumber:''
+      },
+      passwordImportForm:{
+        password1:'',
+        password2:''
+      },
       fileList: [],
-      picUrls: []
+      userName: '',
+      userId:'',
+      userPhoneNumber:'',
+      userEmail:'',
+      userGender:'',
+      userCollege:'',
+      userClass:'',
     }
   },
-  mounted(){
+    created() {
+    this.userName = store.getters.userName;
+    this.userId = store.getters.userId;
+    this.userPhoneNumber = store.getters.userPhoneNumber;
+    this.userEmail = store.getters.userEmail;
+    this.userGender = store.getters.userGender;
+    this.userClass = store.getters.userClass;
+    this.emailImportForm.newEmail = this.userEmail;
+    this.emailImportForm.newPhoneNumber = this.userPhoneNumber
+    },
+    mounted(){
     this.drawLine();
   },
   methods: {
@@ -141,15 +231,48 @@ export default {
 
         })
       },
-    getAllPics() {
-      getPics().then(result => {
-        console.log(result)
-        for(let i = 0; i < result.data.picList.length; i++) {
-          this.picUrls.push("data:image/png;base64," + result.data.picList[i])
-          console.log(result.data.picList[i])
+    open1(){
+      this.dialogVisible2 = true
+    },
+    open2(){
+      this.dialogVisible3 = true
+    },
+    changePhoneNumber() {
+      console.log(this.emailImportForm)
+      updateUserInfo(this.userId, this.emailImportForm.newPhoneNumber, this.emailImportForm.newEmail).then(result => {
+        let data = result.data
+        if (data.success) {
+          this.$message.success('修改成功');
+          this.dialogVisible2 = false
+          this.userPhoneNumber = this.emailImportForm.newPhoneNumber
+          this.userEmail = this.emailImportForm.newEmail
+          console.log(this.userEmail + ' '+this.userPhoneNumber)
+          let form = new FormData()
+          form.append('email', this.userEmail)
+          form.append('number', this.userPhoneNumber)
+          this.$store.dispatch('SetEmailAndNumber', form)
+        } else {
+          this.$message.error('修改失败');
         }
-        console.log(this.picUrls)
       })
+      this.dialogVisible2 = false
+    },
+    changePassword() {
+      if (this.passwordImportForm.password1.trim() != this.passwordImportForm.password2.trim()) {
+        this.$message.error('两次输入的密码不相同');
+      } else if(this.passwordImportForm.password1.trim() === '') {
+        this.$message.error('输入密码不能为空');
+      }else {
+        changePassword(this.userId, this.passwordImportForm.password1).then(result => {
+          let data = result.data
+          if (data.success) {
+            this.$message.success('修改密码成功');
+            this.dialogVisible3 = false
+          } else {
+            this.$message.error('修改密码失败');
+          }
+        })
+      }
     }
   }
 }

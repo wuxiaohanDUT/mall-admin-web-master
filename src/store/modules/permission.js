@@ -1,5 +1,4 @@
 import { asyncRouterMap, constantRouterMap } from '@/router/index';
-import {admainRouterMap, studentRouterMap, teacherRouterMap} from "../../router";
 
 //判断是否有权限访问该菜单
 function hasPermission(menus, route) {
@@ -79,18 +78,26 @@ const permission = {
   actions: {
     GenerateRoutes({ commit }, data) {
       return new Promise(resolve => {
-        console.log(data)
-        const username = data
-        let accessedRouters1
-        if (username === 'student') {
-          accessedRouters1 = studentRouterMap
-        } else if (username === 'teacher') {
-          accessedRouters1 = teacherRouterMap
-        } else if (username === 'admain') {
-          accessedRouters1 = admainRouterMap
-        }
-        const accessedRouters = accessedRouters1
-        console.log(accessedRouters)
+        const { menus } = data;
+        const { username } = data;
+        const accessedRouters = asyncRouterMap.filter(v => {
+          //admin帐号直接返回所有菜单
+          if(username==='admin') return true;
+          if (hasPermission(menus, v)) {
+            if (v.children && v.children.length > 0) {
+              v.children = v.children.filter(child => {
+                if (hasPermission(menus, child)) {
+                  return child
+                }
+                return false;
+              });
+              return v
+            } else {
+              return v
+            }
+          }
+          return false;
+        });
         //对菜单进行排序
         sortRouters(accessedRouters);
         commit('SET_ROUTERS', accessedRouters);

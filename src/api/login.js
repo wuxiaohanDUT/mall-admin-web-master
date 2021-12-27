@@ -10,7 +10,27 @@ export function login(userId, password) {
     }
   })
 }
-
+export function updateUserInfo(userId, newUserPhoneNumber, newUserEmail) {
+  return request({
+    url: 'user/updateInfo',
+    method: 'post',
+    data: {
+      userId,
+      newUserPhoneNumber,
+      newUserEmail
+    }
+  })
+}
+export function changePassword(userId, newPassword) {
+  return request({
+    url: '/user/changePassword',
+    method: 'post',
+    data: {
+      userId,
+      newPassword
+    }
+  })
+}
 export function getInfo() {
   return request({
     url: '/admin/info',

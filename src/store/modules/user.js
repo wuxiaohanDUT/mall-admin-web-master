@@ -41,6 +41,12 @@ const user = {
       state.userGender = data.userGender
       state.userType = data.userType
       state.userPhoneNumber = data.userPhoneNumber
+    },
+    SET_PHONE_NUMBER: (state, number) => {
+      state.userPhoneNumber = number
+    },
+    SET_EMAIL: (state, email) => {
+      state.userEmail = email
     }
   },
 
@@ -106,7 +112,11 @@ const user = {
     SetUserData({commit}, result) {
       console.log(result)
       commit('SET_ALL', result)
-    }
+    },
+    SetEmailAndNumber({commit}, data) {
+      commit('SET_PHONE_NUMBER', data.get('number'))
+      commit('SET_EMAIL', data.get('email'))
+    },
   }
 }
 

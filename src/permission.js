@@ -3,7 +3,7 @@ import store from './store'
 import NProgress from 'nprogress' // Progress 进度条
 import 'nprogress/nprogress.css'// Progress 进度条样式
 import { Message } from 'element-ui'
-import { getToken } from '@/utils/auth' // 验权
+import { getToken,removeToken } from '@/utils/auth' // 验权
 const whiteList = ['/login'] // 不重定向白名单
 router.beforeEach((to, from, next) => {
   /*NProgress.start()
@@ -45,7 +45,10 @@ router.beforeEach((to, from, next) => {
   //if (userdata.username === '') {
     //next('/login')
   //}*/
-  if (to.path != '/login' && typeof (getToken()) === "undefined") {
+  console.log(to.path)
+  console.log(store.getters.usertype)
+  let t
+  if (store.getters.token === '' && to.path != '/login') {
     next('/login')
   } else {
     next()
@@ -53,4 +56,9 @@ router.beforeEach((to, from, next) => {
 })
 
 router.afterEach(() => {
+  let menus
+  let username = 'admin'
+  store.dispatch('GenerateRoutes', { menus,username }).then(() => { // 生成可访问的路由表
+   router.addRoutes(store.getters.addRouters); // 动态添加可访问路由表
+  })
 })
