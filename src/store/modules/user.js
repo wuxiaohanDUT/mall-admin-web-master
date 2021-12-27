@@ -3,10 +3,20 @@ import { getToken, setToken, removeToken } from '@/utils/auth'
 
 const user = {
   state: {
-    token: getToken(),
-    name: '',
+    token: '',
+    userName: '',
     avatar: '',
-    roles: []
+    roles: [],
+    type: '',
+    password: '',
+    college: '',
+    userId:'',
+    userPhoneNumber:'',
+    userEmail:'',
+    userGender:'',
+    userCollege:'',
+    userClass:'',
+    userType:''
   },
 
   mutations: {
@@ -21,6 +31,16 @@ const user = {
     },
     SET_ROLES: (state, roles) => {
       state.roles = roles
+    },
+    SET_ALL: (state, data) => {
+      state.userId = data.userId
+      state.token = data.token
+      state.userEmail = data.userEmail
+      state.userClass = data.userClass
+      state.userName = data.userName
+      state.userGender = data.userGender
+      state.userType = data.userType
+      state.userPhoneNumber = data.userPhoneNumber
     }
   },
 
@@ -81,6 +101,11 @@ const user = {
         removeToken()
         resolve()
       })
+    },
+
+    SetUserData({commit}, result) {
+      console.log(result)
+      commit('SET_ALL', result)
     }
   }
 }

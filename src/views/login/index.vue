@@ -40,28 +40,10 @@
           <el-button style="width: 45%" type="primary" :loading="loading" @click.native.prevent="handleLogin">
             登录
           </el-button>
-          <el-button style="width: 45%" type="primary" @click.native.prevent="handleTry">
-            获取体验账号
-          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
     <img :src="login_center_bg" class="login-center-layout">
-    <el-dialog
-      title="公众号二维码"
-      :visible.sync="dialogVisible"
-      :show-close="false"
-      :center="true"
-      width="30%">
-      <div style="text-align: center">
-        <span class="font-title-large"><span class="color-main font-extra-large">关注公众号</span>回复<span class="color-main font-extra-large">体验</span>获取体验账号</span>
-        <br>
-        <img src="http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/banner/qrcode_for_macrozheng_258.jpg" width="160" height="160" style="margin-top: 10px">
-      </div>
-      <span slot="footer" class="dialog-footer">
-    <el-button type="primary" @click="dialogConfirm">确定</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
@@ -69,7 +51,9 @@
   import {isvalidUsername} from '@/utils/validate';
   import {setSupport,getSupport,setCookie,getCookie} from '@/utils/support';
   import login_center_bg from '@/assets/images/login_center_bg.png'
-  import store from '@/store'
+  import {login, getInfo} from "../../api/login"
+  import store from "../../store";
+  import {setToken} from "../../utils/auth";
   export default {
     name: 'login',
     data() {
@@ -100,7 +84,8 @@
         pwdType: 'password',
         login_center_bg,
         dialogVisible:false,
-        supportDialogVisible:false
+        supportDialogVisible:false,
+        passwordError: false,
       }
     },
     created() {
@@ -125,11 +110,33 @@
         this.loading = false;
         setCookie("username",this.loginForm.username,15);
         setCookie("password",this.loginForm.password,15);
-        this.$router.push({path: '/home'})
-        let menus 
-        let username = 'admin'
-        store.dispatch('GenerateRoutes', { menus,username }).then(() => { // 生成可访问的路由表
-          router.addRoutes(store.getters.addRouters); // 动态添加可访问路由表
+        //login(this.loginForm.username, this.loginForm.password)
+        const param = new FormData()
+        param.append("userId", this.loginForm.username)
+        param.append("password",this.loginForm.password)
+        login(this.loginForm.username, this.loginForm.password).then(result => {
+          if (result.data.success) {
+            console.log(result.data.data.token)
+            setToken(result.data.data.token)
+            this.$store.dispatch('SetUserData', result.data.data)
+            this.$router.push({path: '/home'})
+            let type = result.data.data.userType
+            console.log(type)
+            let username
+            let menus
+            if (type === 0) {
+              username = 'student'
+            } else if (type === 1) {
+              username = 'teacher'
+            } else if (type === 2) {
+              username = 'admain'
+            }
+            store.dispatch('GenerateRoutes', username ).then(() => { // 生成可访问的路由表
+              router.addRoutes(store.getters.addRouters); // 动态添加可访问路由表
+            })
+          } else {
+            this.$message.error('密码错误')
+          }
         })
         //console.log(666)
         /*this.$refs.loginForm.validate(valid => {

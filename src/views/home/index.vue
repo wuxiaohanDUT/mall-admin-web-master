@@ -1,6 +1,8 @@
 <template>
   <div >
     <div id="myChart" :style="{width: '300px', height: '300px'}"></div>
+    <img v-for="url in picUrls" :src="url" style="width:100%;height:100%">
+    <el-button @click="getAllPics" type="primary">获取图片</el-button>
          <el-dialog title="导入源数据库表单信息" :visible.sync="dialogVisible1">
       <el-form ref="importFormRef" :model="importForm"  label-width="130px">
         <el-form-item label="病种kgCode:" prop="kgCode" >
@@ -40,7 +42,9 @@
 
 <script>
 import {uploadForm} from '@/api/upload'
-  export default {
+import {getPics} from "@/api/pic"
+
+export default {
   name: 'hello',
   data () {
     return {
@@ -52,7 +56,8 @@ import {uploadForm} from '@/api/upload'
       targetUsername:'',
       targetPassword:'',
       },
-      fileList: []
+      fileList: [],
+      picUrls: []
     }
   },
   mounted(){
@@ -135,7 +140,17 @@ import {uploadForm} from '@/api/upload'
           this.dialogVisible1 = false//关闭对话框
 
         })
-      }
+      },
+    getAllPics() {
+      getPics().then(result => {
+        console.log(result)
+        for(let i = 0; i < result.data.picList.length; i++) {
+          this.picUrls.push("data:image/png;base64," + result.data.picList[i])
+          console.log(result.data.picList[i])
+        }
+        console.log(this.picUrls)
+      })
+    }
   }
 }
 </script>

@@ -1,11 +1,11 @@
 import request from '@/utils/request'
-
-export function login(username, password) {
+import qs from 'qs'
+export function login(userId, password) {
   return request({
-    url: '/admin/login',
+    url: '/user/login',
     method: 'post',
     data: {
-      username,
+      userId,
       password
     }
   })
