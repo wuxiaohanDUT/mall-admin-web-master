@@ -261,8 +261,11 @@ import {changePassword, updateUserInfo} from "../../api/login";
       if (this.passwordImportForm.password1.trim() != this.passwordImportForm.password2.trim()) {
         this.$message.error('两次输入的密码不相同');
       } else if(this.passwordImportForm.password1.trim() === '') {
-        this.$message.error('输入密码不能为空');
-      }else {
+        this.$message.error('密码不能为空');
+      } else if(this.passwordImportForm.password1.trim().length < 3) {
+        this.$message.error('密码不能小于三位');
+      }
+      else {
         changePassword(this.userId, this.passwordImportForm.password1).then(result => {
           let data = result.data
           if (data.success) {
