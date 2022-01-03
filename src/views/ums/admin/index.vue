@@ -130,7 +130,6 @@ export default {
       }
       this.addOneType(this.dynamicValidateForm.typeName, awardlevel);
       this.addDialogVisible = false;
-      this.dynamicValidateForm = '';
     },
     removeDomain(item) {
       var index = this.dynamicValidateForm.awardlevels.indexOf(item)
