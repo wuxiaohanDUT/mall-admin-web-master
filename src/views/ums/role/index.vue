@@ -1,286 +1,130 @@
-<template> 
-  <div class="app-container">
-    <el-card class="filter-container" shadow="never">
-      <div>
-        <i class="el-icon-search"></i>
-        <span>筛选搜索</span>
-        <el-button
-          style="float:right"
-          type="primary"
-          @click="handleSearchList()"
-          size="small">
-          查询搜索
-        </el-button>
-        <el-button
-          style="float:right;margin-right: 15px"
-          @click="handleResetSearch()"
-          size="small">
-          重置
-        </el-button>
-      </div>
-      <div style="margin-top: 15px">
-        <el-form :inline="true" :model="listQuery" size="small" label-width="140px">
-          <el-form-item label="输入搜索：">
-            <el-input v-model="listQuery.keyword" class="input-width" placeholder="角色名称" clearable></el-input>
-          </el-form-item>
-        </el-form>
-      </div>
-    </el-card>
-    <el-card class="operate-container" shadow="never">
-      <i class="el-icon-tickets"></i>
-      <span>数据列表</span>
-      <el-button size="mini" class="btn-add" @click="handleAdd()" style="margin-left: 20px">添加</el-button>
-    </el-card>
-    <div class="table-container">
-      <el-table ref="roleTable"
-                :data="list"
-                style="width: 100%;"
-                v-loading="listLoading" border>
-        <el-table-column label="编号" width="100" align="center">
-          <template slot-scope="scope">{{scope.row.id}}</template>
-        </el-table-column>
-        <el-table-column label="角色名称" align="center">
-          <template slot-scope="scope">{{scope.row.name}}</template>
-        </el-table-column>
-        <el-table-column label="描述" align="center">
-          <template slot-scope="scope">{{scope.row.description}}</template>
-        </el-table-column>
-        <el-table-column label="用户数"  width="100" align="center">
-          <template slot-scope="scope">{{scope.row.adminCount}}</template>
-        </el-table-column>
-        <el-table-column label="添加时间" width="160" align="center">
-          <template slot-scope="scope">{{scope.row.createTime | formatDateTime}}</template>
-        </el-table-column>
-        <el-table-column label="是否启用" width="140" align="center">
-          <template slot-scope="scope">
-            <el-switch
-              @change="handleStatusChange(scope.$index, scope.row)"
-              :active-value="1"
-              :inactive-value="0"
-              v-model="scope.row.status">
-            </el-switch>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="160" align="center">
-          <template slot-scope="scope">
-            <el-row>
-              <el-button size="mini"
-                         type="text"
-                         @click="handleSelectMenu(scope.$index, scope.row)">分配菜单
-              </el-button>
-              <el-button size="mini"
-                         type="text"
-                         @click="handleSelectResource(scope.$index, scope.row)">分配资源
-              </el-button>
-            </el-row>
-            <el-row>
-            <el-button size="mini"
-                       type="text"
-                       @click="handleUpdate(scope.$index, scope.row)">
-              编辑
-            </el-button>
-            <el-button size="mini"
-                       type="text"
-                       @click="handleDelete(scope.$index, scope.row)">删除
-            </el-button>
-            </el-row>
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
-    <div class="pagination-container">
-      <el-pagination
-        background
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        layout="total, sizes,prev, pager, next,jumper"
-        :current-page.sync="listQuery.pageNum"
-        :page-size="listQuery.pageSize"
-        :page-sizes="[5,10,15]"
-        :total="total">
-      </el-pagination>
-    </div>
-    <el-dialog
-      :title="isEdit?'编辑角色':'添加角色'"
-      :visible.sync="dialogVisible"
-      width="40%">
-      <el-form :model="role"
-               ref="roleForm"
-               label-width="150px" size="small">
-        <el-form-item label="角色名称：">
-          <el-input v-model="role.name" style="width: 250px"></el-input>
+<template>
+  <div>
+    <el-card class="login-form-layout">
+      <el-form autoComplete="on"
+               ref="loginForm"
+               label-position="left">
+        <h2 class="login-title color-main">积分规则设置</h2>
+        <el-form-item prop="username" label="获奖类型:">
+          <el-select v-model="checkedId" placeholder="请选择" @change="typeSelectChange()">
+            <el-option
+              v-for="(item, index) in arr"
+              :key="item.typeId"
+              :label="item.typeName"
+              :value="index">
+            </el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="描述：">
-          <el-input v-model="role.description"
-                    type="textarea"
-                    :rows="5"
-                    style="width: 250px"></el-input>
+        <el-form-item prop="password" label="获奖等级:">
+          <el-select v-model="awardLevel" placeholder="请选择">
+            <el-option
+              v-for="item in arr2"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="是否启用：">
-          <el-radio-group v-model="role.status">
-            <el-radio :label="1">是</el-radio>
-            <el-radio :label="0">否</el-radio>
-          </el-radio-group>
+        <el-form-item prop="password" label="积分数目:">
+          <el-select v-model="points" placeholder="请选择">
+            <el-option
+              v-for="item in options"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item style="margin-bottom: 60px;text-align: center">
+          <el-button style="width: 45%" type="primary" :loading="loading" @click.native.prevent="handleSubmmit">
+            提交
+          </el-button>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false" size="small">取 消</el-button>
-        <el-button type="primary" @click="handleDialogConfirm()" size="small">确 定</el-button>
-      </span>
-    </el-dialog>
+    </el-card>
+    <img :src="login_center_bg" class="login-center-layout">
   </div>
 </template>
 <script>
-  import {fetchList,createRole,updateRole,updateStatus,deleteRole} from '@/api/role';
-  import {formatDate} from '@/utils/date';
-
-  const defaultListQuery = {
-    pageNum: 1,
-    pageSize: 5,
-    keyword: null
-  };
-  const defaultRole = {
-    id: null,
-    name: null,
-    description: null,
-    adminCount: 0,
-    status: 1
-  };
-  export default {
-    name: 'roleList',
-    data() {
-      return {
-        listQuery: Object.assign({}, defaultListQuery),
-        list: null,
-        total: null,
-        listLoading: false,
-        dialogVisible: false,
-        role: Object.assign({}, defaultRole),
-        isEdit: false
-      }
-    },
-    created() {
-      this.getList();
-    },
-    filters: {
-      formatDateTime(time) {
-        if (time == null || time === '') {
-          return 'N/A';
+import {getAllType, updateRule} from "../../../api/type";
+export default {
+  data() {
+    return {
+      options: [],
+      arr:[
+        {
+          typeId: 1,
+          typeName: '蓝桥杯',
+          awardLevel: ['一等奖', '二等奖', '三等奖']
+        },
+        {
+          typeId: 2,
+          typeName: '大学生数学竞赛',
+          awardLevel: ['市级奖', '省级奖', '国家级奖']
         }
-        let date = new Date(time);
-        return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
-      }
+      ],
+      arr2:[],
+      value: '',
+      typeName: '',
+      awardLevel: '',
+      points: '',
+      checkedObj: '',
+      checkedId: ''
+    }
+  },
+  created() {
+    getAllType().then(result => {
+      let data = result.data.data
+      this.arr = data
+    })
+    for (let i = 1; i <= 100; i++) {
+      this.options.push(i);
+    }
+  },
+  methods: {
+    typeSelectChange() {
+      console.log(this.checkedId);
+      this.awardLevel = '';
+      this.arr2 = this.arr[this.checkedId].awardLevel;
     },
-    methods: {
-      handleResetSearch() {
-        this.listQuery = Object.assign({}, defaultListQuery);
-      },
-      handleSearchList() {
-        this.listQuery.pageNum = 1;
-        this.getList();
-      },
-      handleSizeChange(val) {
-        this.listQuery.pageNum = 1;
-        this.listQuery.pageSize = val;
-        this.getList();
-      },
-      handleCurrentChange(val) {
-        this.listQuery.pageNum = val;
-        this.getList();
-      },
-      handleAdd() {
-        this.dialogVisible = true;
-        this.isEdit = false;
-        this.role = Object.assign({},defaultRole);
-      },
-      handleStatusChange(index, row) {
-        this.$confirm('是否要修改该状态?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          updateStatus(row.id, {status: row.status}).then(response => {
-            this.$message({
-              type: 'success',
-              message: '修改成功!'
-            });
-          });
-        }).catch(() => {
-          this.$message({
-            type: 'info',
-            message: '取消修改'
-          });
-          this.getList();
-        });
-      },
-      handleDelete(index, row) {
-        this.$confirm('是否要删除该角色?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          let ids = [];
-          ids.push(row.id);
-          let params=new URLSearchParams();
-          params.append("ids",ids);
-          deleteRole(params).then(response => {
-            this.$message({
-              type: 'success',
-              message: '删除成功!'
-            });
-            this.getList();
-          });
-        });
-      },
-      handleUpdate(index, row) {
-        this.dialogVisible = true;
-        this.isEdit = true;
-        this.role = Object.assign({},row);
-      },
-      handleDialogConfirm() {
-        this.$confirm('是否要确认?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          if (this.isEdit) {
-            updateRole(this.role.id,this.role).then(response => {
-              this.$message({
-                message: '修改成功！',
-                type: 'success'
-              });
-              this.dialogVisible =false;
-              this.getList();
-            })
-          } else {
-            createRole(this.role).then(response => {
-              this.$message({
-                message: '添加成功！',
-                type: 'success'
-              });
-              this.dialogVisible =false;
-              this.getList();
-            })
-          }
-        })
-      },
-      handleSelectMenu(index,row){
-        this.$router.push({path:'/ums/allocMenu',query:{roleId:row.id}})
-      },
-      handleSelectResource(index,row){
-        this.$router.push({path:'/ums/allocResource',query:{roleId:row.id}})
-      },
-      getList() {
-        this.listLoading = true;
-        fetchList(this.listQuery).then(response => {
-          this.listLoading = false;
-          this.list = response.data.list;
-          this.total = response.data.total;
-        });
-      }
+    handleSubmmit() {
+      console.log(this.arr[this.checkedId].typeId);
+      console.log(this.awardLevel);
+      console.log(this.points);
+      updateRule(this.arr[this.checkedId].typeId, this.awardLevel, this.points).then(result => {
+        let data = result.data;
+        if (!data.success) {
+          this.$message.error('更新失败');
+        } else {
+          this.$message.success('更新成功');
+        }
+      })
     }
   }
+}
 </script>
-<style></style>
+<style scoped>
+.login-form-layout {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 360px;
+  margin: 140px auto;
+  border-top: 10px solid #409EFF;
+}
+
+.login-title {
+  text-align: center;
+}
+
+.login-center-layout {
+  background: #409EFF;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  margin-top: 200px;
+}
+</style>
 
 

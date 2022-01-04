@@ -27,3 +27,26 @@ export function addType(typeName, awardLevel) {
   })
 }
 
+export function updateRule(typeId, awardLevel, points) {
+  return request({
+    url: 'project/updateRule',
+    method: 'post',
+    data: {
+      typeId,
+      awardLevel,
+      points
+    }
+  })
+}
+
+export function getRuleByTypeName(typeName, pageNum, pageSize) {
+  return request({
+    url: 'project/getRuleByTypeName',
+    method: 'post',
+    data: {
+      typeName,
+      pageNum,
+      pageSize
+    }
+  })
+}
