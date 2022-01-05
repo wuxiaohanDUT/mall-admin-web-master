@@ -35,7 +35,7 @@
           <template slot-scope="scope">{{scope.row.typeName}}</template>
         </el-table-column>
         <el-table-column label="获奖等级" width="490" align="center">
-          <template slot-scope="scope">{{scope.row.awardLevel}}</template>
+          <template slot-scope="scope" >{{scope.row.awardLevel}}</template>
         </el-table-column>
         <el-table-column label="积分数目" width="480" align="center">
           <template slot-scope="scope">{{scope.row.points}}</template>
@@ -86,6 +86,7 @@
       }
     },
     created() {
+      this.getList();
     },
     filters: {
       formatActiveStatus(row) {
