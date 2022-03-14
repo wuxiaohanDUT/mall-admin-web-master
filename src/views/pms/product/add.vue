@@ -1,46 +1,229 @@
 <template>
   <div>
-  <el-badge :value="12" class="item">
-    <el-button size="small">评论</el-button>
-  </el-badge>
-  <el-badge :value="3" class="item">
-    <el-button size="small">回复</el-button>
-  </el-badge>
-  <el-badge :value="1" class="item" type="primary">
-    <el-button size="small">评论</el-button>
-  </el-badge>
-  <el-badge :value="2" class="item" type="warning">
-    <el-button size="small">回复</el-button>
-  </el-badge>
-
-  <el-dropdown trigger="click">
-  <span class="el-dropdown-link">
-    点我查看<i class="el-icon-caret-bottom el-icon--right"></i>
-  </span>
-    <el-dropdown-menu slot="dropdown">
-      <el-dropdown-item class="clearfix">
-        评论
-        <el-badge class="mark" :value="12" />
-      </el-dropdown-item>
-      <el-dropdown-item class="clearfix">
-        回复
-        <el-badge class="mark" :value="3" />
-      </el-dropdown-item>
-    </el-dropdown-menu>
-  </el-dropdown>
+    <el-dialog title="论文项目申请" :visible.sync="dialogVisible1">
+      <el-form ref="importFormRef" :model="importForm"  label-width="130px">
+        <el-form-item label="论文名称:" prop="paperName" >
+          <el-input
+            placeholder="请输入内容"
+            v-model="paperName"
+          >
+          </el-input>
+        </el-form-item>
+        <el-form-item label="发表期刊:" prop="publicationPeriodical" >
+          <el-input
+            placeholder="请输入内容"
+            v-model="publicationPeriodical"
+          >
+          </el-input>
+        </el-form-item>
+        <el-form-item label="收录情况:" prop="collection" >
+          <el-input
+            placeholder="请输入内容"
+            v-model="collection"
+          >
+          </el-input>
+        </el-form-item>
+        <el-form-item label = "发表时间:" prop="date">
+          <el-date-picker
+            v-model="date"
+            type="date"
+            placeholder="选择日期">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item
+          v-for="(domain, index) in dynamicValidateForm.domains"
+          :label="'作者' + (index + 1)"
+          :key="domain.key"
+          :prop="'domains.' + index + '.value'"
+        >
+          <el-input v-model="domain.value" placeholder="请输入作者学号"></el-input><el-button @click.prevent="removeDomain(domain)">删除</el-button>
+        </el-form-item>
+        <el-form-item label="描述:" prop="description" >
+          <el-input
+            type="textarea"
+            placeholder="请输入内容"
+            v-model="description"
+            maxlength="30"
+            show-word-limit
+          >
+          </el-input>
+        </el-form-item>
+        <el-form-item label="上传文件:" prop="excel">
+          <el-upload
+            class="upload-demo"
+            ref="upload"
+            action=""
+            :http-request="httpRequest"
+            :before-upload="beforeUpload"
+            :on-exceed="handleExceed"
+            :limit="2">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传.png文件，且不超过5M</div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="submitImportForm">开始导入</el-button>
+          <el-button type="info" @click="dialogVisible = false">关闭窗口</el-button>
+          <el-button @click="addDomain">新增参与者</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
-
 <script>
-  import ProductDetail from './components/ProductDetail'
-  export default {
-    name: 'addProduct',
-    components: { ProductDetail }
+import {getAllType} from "../../../api/type";
+import store from "../../../store";
+import {addFormImg, addPaperForm, addProjectForm} from "../../../api/upload";
+export default {
+  data () {
+    return {
+      userId: '',
+      dialogVisible1: true,
+      importForm: {
+        kgCode: '',
+        targetUrl: '',
+        targetUsername: '',
+        targetPassword: '',
+      },
+      fileList: [],
+      arr: [],
+      checkedId: '',
+      awardLevel: '',
+      dynamicValidateForm: {
+        domains: [{
+          value: ''
+        }],
+      },
+      description: '',
+      instructors: '',
+      date: '',
+      formId: '',
+      paperName: '',
+      publicationPeriodical: '',
+      collection: '',
+    }
+  },
+  created() {
+    this.userId = store.getters.userId;
+    getAllType().then(result => {
+      let data = result.data.data
+      this.arr = data
+    })
+  },
+  methods: {
+    httpRequest(option) {
+      this.fileList.push(option)
+    },
+    // 上传前处理
+    beforeUpload(file) {
+      let fileSize = file.size
+      const FIVE_M= 5*1024*1024;
+      //大于5M，不允许上传
+      if(fileSize>FIVE_M){
+        this.$message.error("最大上传5M")
+        return  false
+      }
+      //判断文件类型，必须是xlsx格式
+      let fileName = file.name
+      let reg = /^.+(\.png)$/
+      if(!reg.test(fileName)){
+        this.$message.error("只能上传png!")
+        return false
+      }
+      return true
+    },
+    // 文件数量过多时提醒
+    handleExceed() {
+      this.$message({ type: 'error', message: '最多支持2个附件上传' })
+    },
+    submitImportForm() {
+      console.log(this.arr[this.checkedId]);
+      console.log(this.awardLevel);
+      console.log(this.dynamicValidateForm.domains);
+      console.log(this.instructors);
+      console.log(this.description);
+      console.log(this.date)
+      console.log(this.userId)
+      var participantIds = []
+      for (let i = 0; i < this.dynamicValidateForm.domains.length; i++) {
+        participantIds.push(this.dynamicValidateForm.domains[i].value)
+      }
+      console.log(this.dynamicValidateForm)
+      console.log(participantIds)
+      addPaperForm(this.userId, participantIds, this.date, 0, this.description, this.publicationPeriodical, this.paperName, this.collection).then(res => {
+        this.formId = res.data.data
+        if (res.data.data) {
+          // 使用form表单的数据格式
+          const params = new FormData()
+          // 将上传文件数组依次添加到参数paramsData中
+          this.fileList.forEach((item) => {
+            params.append('files', item.file)
+          });
+          // 将输入表单数据添加到params表单中
+          //params.append('kgCode', this.importForm.kgCode)
+          //params.append('targetUrl', this.importForm.targetUrl)
+          //params.append('targetUsername', this.importForm.targetUsername)
+          //params.append('targetPassword', this.importForm.targetPassword)
+          params.append('formId', this.formId)
+          //这里根据自己封装的axios来进行调用后端接口
+          addFormImg(params).then(res => {
+            if (res.data.data.success) {
+              this.$message({
+                message: "导入成功",
+                type: "success"
+              })
+            }else{
+              this.$message({
+                message: "导入失败",
+                type: "error"
+              })
+            }
+            this.$refs.importFormRef.resetFields()//清除表单信息
+            this.$refs.upload.clearFiles()//清空上传列表
+            this.fileList = []//集合清空
+            this.dialogVisible1 = false//关闭对话框
+          })
+        } else {
+          this.$message({
+            message: "导入失败",
+            type: "error"
+          })
+        }
+      })
+    },
+    typeSelectChange() {
+      console.log(this.checkedId);
+      this.awardLevel = '';
+      this.arr2 = this.arr[this.checkedId].awardLevel;
+    },
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          alert('submit!');
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+    removeDomain(item) {
+      var index = this.dynamicValidateForm.domains.indexOf(item)
+      if (index !== -1) {
+        this.dynamicValidateForm.domains.splice(index, 1)
+      }
+    },
+    addDomain() {
+      this.dynamicValidateForm.domains.push({
+        value: '',
+        key: Date.now()
+      });
+    }
   }
-</script>
-<style>
-.item {
-  margin-top: 10px;
-  margin-right: 40px;
 }
-</style>
+</script>
+<style></style>
+
+

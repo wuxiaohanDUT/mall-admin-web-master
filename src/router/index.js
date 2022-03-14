@@ -45,13 +45,13 @@ export const asyncRouterMap = [
       path: 'product',
       name: 'product',
       component: () => import('@/views/pms/product/index'),
-      meta: {title: '商品列表', icon: 'product-list'}
+      meta: {title: '科创项目申请', icon: 'product-list'}
     },
       {
         path: 'addProduct',
         name: 'addProduct',
         component: () => import('@/views/pms/product/add'),
-        meta: {title: '添加商品', icon: 'product-add'}
+        meta: {title: '论文项目申请', icon: 'product-add'}
       },
       {
         path: 'updateProduct',
@@ -64,7 +64,7 @@ export const asyncRouterMap = [
         path: 'productCate',
         name: 'productCate',
         component: () => import('@/views/pms/productCate/index'),
-        meta: {title: '商品分类', icon: 'product-cate'}
+        meta: {title: '工单查看和审批', icon: 'product-cate'}
       },
       {
         path: 'addProductCate',
@@ -301,13 +301,13 @@ export const asyncRouterMap = [
         path: 'admin',
         name: 'admin',
         component: () => import('@/views/ums/admin/index'),
-        meta: {title: '用户列表', icon: 'ums-admin'}
+        meta: {title: '获奖类型配置', icon: 'ums-admin'}
       },
       {
         path: 'role',
         name: 'role',
         component: () => import('@/views/ums/role/index'),
-        meta: {title: '角色列表', icon: 'ums-role'}
+        meta: {title: '积分规则设置', icon: 'ums-role'}
       },
       {
         path: 'allocMenu',
@@ -327,7 +327,7 @@ export const asyncRouterMap = [
         path: 'menu',
         name: 'menu',
         component: () => import('@/views/ums/menu/index'),
-        meta: {title: '菜单列表', icon: 'ums-menu'}
+        meta: {title: '积分规则查看', icon: 'ums-menu'}
       },
       {
         path: 'addMenu',

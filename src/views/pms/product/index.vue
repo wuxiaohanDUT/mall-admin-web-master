@@ -22,6 +22,13 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label = "获奖日期:" prop="date">
+          <el-date-picker
+            v-model="date"
+            type="date"
+            placeholder="选择日期">
+          </el-date-picker>
+        </el-form-item>
         <el-form-item
           v-for="(domain, index) in dynamicValidateForm.domains"
           :label="'参与者' + (index + 1)"
@@ -53,7 +60,7 @@
             :on-exceed="handleExceed"
             :limit="2">
             <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传.xlsx文件，且不超过5M</div>
+            <div slot="tip" class="el-upload__tip">只能上传.png文件，且不超过5M</div>
           </el-upload>
         </el-form-item>
         <el-form-item>
@@ -68,6 +75,7 @@
 <script>
 import {getAllType} from "../../../api/type";
 import store from "../../../store";
+import {addFormImg, addProjectForm} from "../../../api/upload";
 export default {
   data () {
     return {
@@ -90,6 +98,8 @@ export default {
       },
       description: '',
       instructors: '',
+      date: '',
+      formId: '',
     }
   },
   created() {
@@ -131,35 +141,52 @@ export default {
       console.log(this.dynamicValidateForm.domains);
       console.log(this.instructors);
       console.log(this.description);
-      // 使用form表单的数据格式
-      /*const params = new FormData()
-      // 将上传文件数组依次添加到参数paramsData中
-      this.fileList.forEach((item) => {
-        params.append('file', item.file)
-      });
-      // 将输入表单数据添加到params表单中
-      params.append('kgCode', this.importForm.kgCode)
-      params.append('targetUrl', this.importForm.targetUrl)
-      params.append('targetUsername', this.importForm.targetUsername)
-      params.append('targetPassword', this.importForm.targetPassword)
-      //这里根据自己封装的axios来进行调用后端接口
-      uploadForm(params).then(res => {
-        if (res.data.success) {
-          this.$message({
-            message: "导入成功",
-            type: "success"
+      console.log(this.date)
+      console.log(this.userId)
+      var participantIds = []
+      for (let i = 0; i < this.dynamicValidateForm.domains.length; i++) {
+        participantIds.push(this.dynamicValidateForm.domains[i].value)
+      }
+      addProjectForm(this.userId, this.arr[this.checkedId].typeId, this.awardLevel, participantIds, this.instructors, this.date, 1, this.description).then(res => {
+        this.formId = res.data.data
+        if (res.data.data) {
+          // 使用form表单的数据格式
+          const params = new FormData()
+          // 将上传文件数组依次添加到参数paramsData中
+          this.fileList.forEach((item) => {
+            params.append('files', item.file)
+          });
+          // 将输入表单数据添加到params表单中
+          //params.append('kgCode', this.importForm.kgCode)
+          //params.append('targetUrl', this.importForm.targetUrl)
+          //params.append('targetUsername', this.importForm.targetUsername)
+          //params.append('targetPassword', this.importForm.targetPassword)
+          params.append('formId', this.formId)
+          //这里根据自己封装的axios来进行调用后端接口
+          addFormImg(params).then(res => {
+            if (res.data.data.success) {
+              this.$message({
+                message: "导入成功",
+                type: "success"
+              })
+            }else{
+              this.$message({
+                message: "导入失败",
+                type: "error"
+              })
+            }
+            this.$refs.importFormRef.resetFields()//清除表单信息
+            this.$refs.upload.clearFiles()//清空上传列表
+            this.fileList = []//集合清空
+            this.dialogVisible1 = false//关闭对话框
           })
-        }else{
+        } else {
           this.$message({
             message: "导入失败",
             type: "error"
           })
         }
-        this.$refs.importFormRef.resetFields()//清除表单信息
-        this.$refs.upload.clearFiles()//清空上传列表
-        this.fileList = []//集合清空
-        this.dialogVisible1 = false//关闭对话框
-      })*/
+      })
     },
     typeSelectChange() {
       console.log(this.checkedId);
