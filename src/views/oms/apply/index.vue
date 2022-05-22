@@ -1,131 +1,6 @@
 <template> 
   <div class="app-container">
-    <el-card class="filter-container" shadow="never">
-      <div>
-        <i class="el-icon-search"></i>
-        <span>筛选搜索</span>
-        <el-button
-          style="float:right"
-          type="primary"
-          @click="handleSearchList()"
-          size="small">
-          查询搜索
-        </el-button>
-        <el-button
-          style="float:right;margin-right: 15px"
-          @click="handleResetSearch()"
-          size="small">
-          重置
-        </el-button>
-      </div>
-      <div style="margin-top: 15px">
-        <el-form :inline="true" :model="listQuery" size="small" label-width="140px">
-          <el-form-item label="输入搜索：">
-            <el-input v-model="listQuery.id" class="input-width" placeholder="服务单号"></el-input>
-          </el-form-item>
-          <el-form-item label="处理状态：">
-            <el-select v-model="listQuery.status" placeholder="全部" clearable class="input-width">
-              <el-option v-for="item in statusOptions"
-                         :key="item.value"
-                         :label="item.label"
-                         :value="item.value">
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="申请时间：">
-            <el-date-picker
-              class="input-width"
-              v-model="listQuery.createTime"
-              value-format="yyyy-MM-dd"
-              type="date"
-              placeholder="请选择时间">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="操作人员：">
-            <el-input v-model="listQuery.handleMan" class="input-width" placeholder="全部"></el-input>
-          </el-form-item>
-          <el-form-item label="处理时间：">
-            <el-date-picker
-              class="input-width"
-              v-model="listQuery.handleTime"
-              value-format="yyyy-MM-dd"
-              type="date"
-              placeholder="请选择时间">
-            </el-date-picker>
-          </el-form-item>
-        </el-form>
-      </div>
-    </el-card>
-    <el-card class="operate-container" shadow="never">
-      <i class="el-icon-tickets"></i>
-      <span>数据列表</span>
-    </el-card>
-    <div class="table-container">
-      <el-table ref="returnApplyTable"
-                :data="list"
-                style="width: 100%;"
-                @selection-change="handleSelectionChange"
-                v-loading="listLoading" border>
-        <el-table-column type="selection" width="60" align="center"></el-table-column>
-        <el-table-column label="服务单号" width="180" align="center">
-          <template slot-scope="scope">{{scope.row.id}}</template>
-        </el-table-column>
-        <el-table-column label="申请时间" width="180" align="center">
-          <template slot-scope="scope">{{scope.row.createTime | formatTime}}</template>
-        </el-table-column>
-        <el-table-column label="用户账号" align="center">
-          <template slot-scope="scope">{{scope.row.memberUsername}}</template>
-        </el-table-column>
-        <el-table-column label="退款金额" width="180" align="center">
-          <template slot-scope="scope">￥{{scope.row | formatReturnAmount}}</template>
-        </el-table-column>
-        <el-table-column label="申请状态" width="180" align="center">
-          <template slot-scope="scope">{{scope.row.status | formatStatus}}</template>
-        </el-table-column>
-        <el-table-column label="处理时间" width="180" align="center">
-          <template slot-scope="scope">{{scope.row.handleTime | formatTime}}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="180" align="center">
-          <template slot-scope="scope">
-            <el-button
-            size="mini"
-            @click="handleViewDetail(scope.$index, scope.row)">查看详情</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
-    <div class="batch-operate-container">
-      <el-select
-        size="small"
-        v-model="operateType" placeholder="批量操作">
-        <el-option
-          v-for="item in operateOptions"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value">
-        </el-option>
-      </el-select>
-      <el-button
-        style="margin-left: 20px"
-        class="search-button"
-        @click="handleBatchOperate()"
-        type="primary"
-        size="small">
-        确定
-      </el-button>
-    </div>
-    <div class="pagination-container">
-      <el-pagination
-        background
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        layout="total, sizes,prev, pager, next,jumper"
-        :current-page.sync="listQuery.pageNum"
-        :page-size="listQuery.pageSize"
-        :page-sizes="[5,10,15]"
-        :total="total">
-      </el-pagination>
-    </div>
+    <div id="myChart2" :style="{width: '600px', height: '600px'}"></div>
   </div>
 </template>
 <script>
@@ -181,6 +56,9 @@
     created(){
       this.getList();
     },
+    mounted() {
+      this.drawLine()
+    },
     filters:{
       formatTime(time) {
         if(time==null||time===''){
@@ -201,6 +79,62 @@
       }
     },
     methods:{
+      drawLine(){
+        // 基于准备好的dom，初始化echarts实例
+        /*let myChart = this.$echarts.init(document.getElementById('myChart'))
+        // 绘制图表
+        let arr = [5, 20, 36, 10, 10, 20, 12, 34, 54, 67, 11, 23]
+        let name = '申请人数'
+        myChart.setOption({
+          title: { text: '近一年数据' },
+          tooltip: {},
+          xAxis: {
+            data: ["1","2","3","4","5","6","7","8","9","10","11","12"]
+          },
+          yAxis: {},
+          series: [{
+            name: name,
+            type: 'bar',
+            data: arr
+          }]
+        });*/
+        let myChart2 = this.$echarts.init(document.getElementById('myChart2'))
+        myChart2.setOption({
+          title: {
+            text: '科创项目申请占比情况',
+            subtext: '统计图',
+            left: 'center'
+          },
+          tooltip: {
+            trigger: 'item'
+          },
+          legend: {
+            orient: 'vertical',
+            left: 'left'
+          },
+          series: [
+            {
+              name: '申请数量',
+              type: 'pie',
+              radius: '50%',
+              data: [
+                { value: 11, name: '蓝桥杯' },
+                { value: 2, name: 'ICPC' },
+                { value: 45, name: '大学生数学竞赛' },
+                { value: 21, name: '大学生创业大赛' },
+                { value: 17, name: '互联网+创新大赛' }
+              ],
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
+            }
+          ]
+        })
+      },
       handleSelectionChange(val){
         this.multipleSelection = val;
       },

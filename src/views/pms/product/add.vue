@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog title="论文项目申请" :visible.sync="dialogVisible1">
+    <el-dialog title="论文项目申请" :visible.sync="dialogVisible1" @close = 'dlgclose'>
       <el-form ref="importFormRef" :model="importForm"  label-width="130px">
         <el-form-item label="论文名称:" prop="paperName" >
           <el-input
@@ -87,20 +87,20 @@ export default {
       },
       fileList: [],
       arr: [],
-      checkedId: '',
-      awardLevel: '',
+      checkedId: null,
+      awardLevel: null,
       dynamicValidateForm: {
         domains: [{
           value: ''
         }],
       },
       description: '',
-      instructors: '',
-      date: '',
-      formId: '',
-      paperName: '',
-      publicationPeriodical: '',
-      collection: '',
+      instructors: null,
+      date: null,
+      formId: null,
+      paperName: null,
+      publicationPeriodical: null,
+      collection: null,
     }
   },
   created() {
@@ -150,46 +150,101 @@ export default {
       }
       console.log(this.dynamicValidateForm)
       console.log(participantIds)
-      addPaperForm(this.userId, participantIds, this.date, 0, this.description, this.publicationPeriodical, this.paperName, this.collection).then(res => {
-        this.formId = res.data.data
-        if (res.data.data) {
-          // 使用form表单的数据格式
-          const params = new FormData()
-          // 将上传文件数组依次添加到参数paramsData中
-          this.fileList.forEach((item) => {
-            params.append('files', item.file)
-          });
-          // 将输入表单数据添加到params表单中
-          //params.append('kgCode', this.importForm.kgCode)
-          //params.append('targetUrl', this.importForm.targetUrl)
-          //params.append('targetUsername', this.importForm.targetUsername)
-          //params.append('targetPassword', this.importForm.targetPassword)
-          params.append('formId', this.formId)
-          //这里根据自己封装的axios来进行调用后端接口
-          addFormImg(params).then(res => {
-            if (res.data.data.success) {
-              this.$message({
-                message: "导入成功",
-                type: "success"
-              })
-            }else{
-              this.$message({
-                message: "导入失败",
-                type: "error"
-              })
-            }
-            this.$refs.importFormRef.resetFields()//清除表单信息
-            this.$refs.upload.clearFiles()//清空上传列表
-            this.fileList = []//集合清空
-            this.dialogVisible1 = false//关闭对话框
-          })
-        } else {
-          this.$message({
-            message: "导入失败",
+      let check = true
+      for(let i = 0; i < participantIds.length; i++){
+        if (participantIds[i] == '') {
+          this.$notify({
+            title: '错误',
+            message: "参与者学号输入有误",
             type: "error"
           })
+          check = false;
+          break;
         }
-      })
+      }
+      if(this.date == null) {
+        this.$notify({
+          title: '错误',
+          message: "获奖日期不能为空",
+          type: "error"
+        })
+        check = false;
+      }
+      if (this.fileList.length == 0) {
+        this.$notify({
+          title: '错误',
+          message: "请添加证明图片",
+          type: "error"
+        })
+        check = false;
+      }
+      if (this.publicationPeriodical == null) {
+        this.$notify({
+          title: '错误',
+          message: "请输入发表期刊",
+          type: "error"
+        })
+        check = false;
+      }
+      if (this.collection == null) {
+        this.$notify({
+          title: '错误',
+          message: "请输入收录期刊",
+          type: "error"
+        })
+        check = false;
+      }
+      if (this.paperName == null) {
+        this.$notify({
+          title: '错误',
+          message: "请输入期刊名称",
+          type: "error"
+        })
+        check = false;
+      }
+      if (check) {
+        addPaperForm(this.userId, participantIds, this.date, 0, this.description, this.publicationPeriodical, this.paperName, this.collection).then(res => {
+          this.formId = res.data.data
+          if (res.data.data) {
+            // 使用form表单的数据格式
+            const params = new FormData()
+            // 将上传文件数组依次添加到参数paramsData中
+            this.fileList.forEach((item) => {
+              params.append('files', item.file)
+            });
+            // 将输入表单数据添加到params表单中
+            //params.append('kgCode', this.importForm.kgCode)
+            //params.append('targetUrl', this.importForm.targetUrl)
+            //params.append('targetUsername', this.importForm.targetUsername)
+            //params.append('targetPassword', this.importForm.targetPassword)
+            params.append('formId', this.formId)
+            //这里根据自己封装的axios来进行调用后端接口
+            addFormImg(params).then(res => {
+              this.dialogVisible1 = false
+              if (res.data.data.success) {
+                this.$message({
+                  message: "导入成功",
+                  type: "success"
+                })
+              } else {
+                this.$message({
+                  message: "导入失败",
+                  type: "error"
+                })
+              }
+            })
+          } else {
+            this.$message({
+              message: "导入失败",
+              type: "error"
+            })
+          }
+        })
+      }
+      this.$refs.importFormRef.resetFields()//清除表单信息
+      this.$refs.upload.clearFiles()//清空上传列表
+      this.fileList = []//集合清空
+      this.dialogVisible1 = false//关闭对话框
     },
     typeSelectChange() {
       console.log(this.checkedId);
@@ -205,6 +260,9 @@ export default {
           return false;
         }
       });
+    },
+    dlgclose() {
+      this.$router.push({path:'/pms/productAttr'})
     },
     resetForm(formName) {
       this.$refs[formName].resetFields();

@@ -40,18 +40,20 @@ export const asyncRouterMap = [
     component: Layout,
     redirect: '/pms/product',
     name: 'pms',
-    meta: {title: '商品', icon: 'product'},
+    meta: {title: '论文科创项目', icon: 'product'},
     children: [{
       path: 'product',
       name: 'product',
       component: () => import('@/views/pms/product/index'),
-      meta: {title: '科创项目申请', icon: 'product-list'}
+      meta: {title: '科创项目申请', icon: 'product-list'},
+      hidden: true
     },
       {
         path: 'addProduct',
         name: 'addProduct',
         component: () => import('@/views/pms/product/add'),
-        meta: {title: '论文项目申请', icon: 'product-add'}
+        meta: {title: '论文项目申请', icon: 'product-add'},
+        hidden: true
       },
       {
         path: 'updateProduct',
@@ -84,7 +86,7 @@ export const asyncRouterMap = [
         path: 'productAttr',
         name: 'productAttr',
         component: () => import('@/views/pms/productAttr/index'),
-        meta: {title: '商品类型', icon: 'product-attr'}
+        meta: {title: '申请记录', icon: 'product-attr'}
       },
       {
         path: 'productAttrList',
@@ -111,7 +113,7 @@ export const asyncRouterMap = [
         path: 'brand',
         name: 'brand',
         component: () => import('@/views/pms/brand/index'),
-        meta: {title: '品牌管理', icon: 'product-brand'}
+        meta: {title: '论文发表记录', icon: 'product-brand'}
       },
       {
         path: 'addBrand',
@@ -134,13 +136,13 @@ export const asyncRouterMap = [
     component: Layout,
     redirect: '/oms/order',
     name: 'oms',
-    meta: {title: '订单', icon: 'order'},
+    meta: {title: '科创积分', icon: 'order'},
     children: [
       {
         path: 'order',
         name: 'order',
         component: () => import('@/views/oms/order/index'),
-        meta: {title: '订单列表', icon: 'product-list'}
+        meta: {title: '科创积分记录', icon: 'product-list'}
       },
       {
         path: 'orderDetail',
@@ -160,19 +162,19 @@ export const asyncRouterMap = [
         path: 'orderSetting',
         name: 'orderSetting',
         component: () => import('@/views/oms/order/setting'),
-        meta: {title: '订单设置', icon: 'order-setting'}
+        meta: {title: '积分统计查看', icon: 'order-setting'}
       },
       {
         path: 'returnApply',
         name: 'returnApply',
         component: () => import('@/views/oms/apply/index'),
-        meta: {title: '退货申请处理', icon: 'order-return'}
+        meta: {title: '科创项目看板', icon: 'order-return'}
       },
       {
         path: 'returnReason',
         name: 'returnReason',
         component: () => import('@/views/oms/apply/reason'),
-        meta: {title: '退货原因设置', icon: 'order-return-reason'}
+        meta: {title: '科创积分看板', icon: 'order-return-reason'}
       },
       {
         path: 'returnApplyDetail',
@@ -189,6 +191,7 @@ export const asyncRouterMap = [
     redirect: '/sms/coupon',
     name: 'sms',
     meta: {title: '营销', icon: 'sms'},
+    hidden: true,
     children: [
       {
         path: 'flash',
@@ -295,7 +298,7 @@ export const asyncRouterMap = [
     component: Layout,
     redirect: '/ums/admin',
     name: 'ums',
-    meta: {title: '权限', icon: 'ums'},
+    meta: {title: '数据配置', icon: 'ums'},
     children: [
       {
         path: 'admin',

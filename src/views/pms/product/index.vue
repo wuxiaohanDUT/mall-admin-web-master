@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog title="科创项目申请" :visible.sync="dialogVisible1">
+    <el-dialog title="科创项目申请" :visible.sync="dialogVisible1" @close = "dlgclose">
       <el-form ref="importFormRef" :model="importForm"  label-width="130px">
         <el-form-item prop="username" label="获奖类型:">
           <el-select v-model="checkedId" placeholder="请选择" @change="typeSelectChange()">
@@ -65,7 +65,6 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitImportForm">开始导入</el-button>
-          <el-button type="info" @click="dialogVisible = false">关闭窗口</el-button>
           <el-button @click="addDomain">新增参与者</el-button>
         </el-form-item>
       </el-form>
@@ -81,6 +80,8 @@ export default {
     return {
       userId: '',
       dialogVisible1: true,
+      dialogVisible2: false,
+      info:'',
       importForm: {
         kgCode: '',
         targetUrl: '',
@@ -90,16 +91,16 @@ export default {
       fileList: [],
       arr: [],
       checkedId: '',
-      awardLevel: '',
+      awardLevel: null,
       dynamicValidateForm: {
         domains: [{
           value: ''
         }],
       },
-      description: '',
-      instructors: '',
-      date: '',
-      formId: '',
+      description: null,
+      instructors: null,
+      date: null,
+      formId: null,
     }
   },
   created() {
@@ -136,6 +137,7 @@ export default {
       this.$message({ type: 'error', message: '最多支持2个附件上传' })
     },
     submitImportForm() {
+      this.loading = true
       console.log(this.arr[this.checkedId]);
       console.log(this.awardLevel);
       console.log(this.dynamicValidateForm.domains);
@@ -144,49 +146,85 @@ export default {
       console.log(this.date)
       console.log(this.userId)
       var participantIds = []
+      var success = false
+      var flag = 0
+      let check = true
       for (let i = 0; i < this.dynamicValidateForm.domains.length; i++) {
         participantIds.push(this.dynamicValidateForm.domains[i].value)
       }
-      addProjectForm(this.userId, this.arr[this.checkedId].typeId, this.awardLevel, participantIds, this.instructors, this.date, 1, this.description).then(res => {
-        this.formId = res.data.data
-        if (res.data.data) {
-          // 使用form表单的数据格式
-          const params = new FormData()
-          // 将上传文件数组依次添加到参数paramsData中
-          this.fileList.forEach((item) => {
-            params.append('files', item.file)
-          });
-          // 将输入表单数据添加到params表单中
-          //params.append('kgCode', this.importForm.kgCode)
-          //params.append('targetUrl', this.importForm.targetUrl)
-          //params.append('targetUsername', this.importForm.targetUsername)
-          //params.append('targetPassword', this.importForm.targetPassword)
-          params.append('formId', this.formId)
-          //这里根据自己封装的axios来进行调用后端接口
-          addFormImg(params).then(res => {
-            if (res.data.data.success) {
-              this.$message({
-                message: "导入成功",
-                type: "success"
-              })
-            }else{
-              this.$message({
-                message: "导入失败",
-                type: "error"
-              })
-            }
-            this.$refs.importFormRef.resetFields()//清除表单信息
-            this.$refs.upload.clearFiles()//清空上传列表
-            this.fileList = []//集合清空
-            this.dialogVisible1 = false//关闭对话框
-          })
-        } else {
-          this.$message({
-            message: "导入失败",
+      for(let i = 0; i < participantIds.length; i++){
+        if (participantIds[i] == '') {
+          this.$notify({
+            title: '错误',
+            message: "参与者学号输入有误",
             type: "error"
           })
+          check = false;
+          break;
         }
-      })
+      }
+      if(this.instructors == null) {
+        this.$notify({
+          title: '错误',
+          message: "指导教师不能为空",
+          type: "error"
+        })
+        check = false;
+      }
+      if(this.date == null) {
+        this.$notify({
+          title: '错误',
+          message: "获奖日期不能为空",
+          type: "error"
+        })
+        check = false;
+      }
+      if (this.fileList.length == 0) {
+        this.$notify({
+          title: '错误',
+          message: "请添加证明图片",
+          type: "error"
+        })
+        check = false;
+      }
+      if (check) {
+        addProjectForm(this.userId, this.arr[this.checkedId].typeId, this.awardLevel, participantIds, this.instructors, this.date, 1, this.description).then(res => {
+          this.formId = res.data.data
+          if (res.data.data) {
+            // 使用form表单的数据格式
+            const params = new FormData()
+            // 将上传文件数组依次添加到参数paramsData中
+            this.fileList.forEach((item) => {
+              params.append('files', item.file)
+            });
+            // 将输入表单数据添加到params表单中
+            //params.append('kgCode', this.importForm.kgCode)
+            //params.append('targetUrl', this.importForm.targetUrl)
+            //params.append('targetUsername', this.importForm.targetUsername)
+            //params.append('targetPassword', this.importForm.targetPassword)
+            params.append('formId', this.formId)
+            //这里根据自己封装的axios来进行调用后端接口
+            addFormImg(params).then(res => {
+              this.dialogVisible1 = false
+              success = res.data.data.success
+              if (success) {
+                this.info = '项目创建成功'
+              } else {
+                this.info = '项目创建失败'
+              }
+            })
+          } else {
+            this.$message({
+              message: "导入失败",
+              type: "error"
+            })
+          }
+        })
+      }
+      this.$refs.importFormRef.resetFields()//清除表单信息
+      this.$refs.upload.clearFiles()//清空上传列表
+      this.fileList = []//集合清空
+      this.dialogVisible1 = false//关闭对话框
     },
     typeSelectChange() {
       console.log(this.checkedId);
@@ -206,6 +244,9 @@ export default {
     resetForm(formName) {
       this.$refs[formName].resetFields();
     },
+    dlgclose() {
+      this.$router.push({path:'/pms/productAttr'})
+    },
     removeDomain(item) {
       var index = this.dynamicValidateForm.domains.indexOf(item)
       if (index !== -1) {
@@ -217,7 +258,7 @@ export default {
         value: '',
         key: Date.now()
       });
-    }
+    },
   }
 }
 </script>

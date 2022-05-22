@@ -1,39 +1,7 @@
 <template>
   <div >
-    <div id="myChart" :style="{width: '300px', height: '300px'}"></div>
-         <el-dialog title="导入源数据库表单信息" :visible.sync="dialogVisible1">
-      <el-form ref="importFormRef" :model="importForm"  label-width="130px">
-        <el-form-item label="病种kgCode:" prop="kgCode" >
-          <el-input v-model="importForm.kgCode" ></el-input>
-        </el-form-item>
-        <el-form-item label="目标数据库URL:" prop="targetUrl" >
-          <el-input v-model="importForm.targetUrl"></el-input>
-        </el-form-item>
-        <el-form-item label="目标数据库账号:" prop="targetUsername" >
-          <el-input v-model="importForm.targetUsername"></el-input>
-        </el-form-item>
-        <el-form-item label="目标数据库密码: " prop="targetPassword" >
-          <el-input v-model="importForm.targetPassword"></el-input>
-        </el-form-item>
-        <el-form-item label="上传文件:" prop="excel">
-          <el-upload
-            class="upload-demo"
-            ref="upload"
-            action=""
-            :http-request="httpRequest"
-            :before-upload="beforeUpload"
-            :on-exceed="handleExceed"
-            :limit="2">
-            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传.xlsx文件，且不超过5M</div>
-          </el-upload>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="submitImportForm">开始导入</el-button>
-          <el-button type="info" @click="dialogVisible = false">关闭窗口</el-button>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
+    <!--<div id="myChart" :style="{width: '300px', height: '300px'}"></div>-->
+    <el-card class="filter-container" shadow="never">
     <el-descriptions class="margin-top" title="个人信息" :column="3" :size="size" border>
       <template slot="extra">
         <el-button type="primary" size="small" @click.native.prevent="open1">修改邮箱手机号</el-button>
@@ -101,6 +69,7 @@
         </el-form-item>
       </el-form>
     </el-dialog>
+    </el-card>
   </div>
 </template>
 
@@ -108,6 +77,7 @@
 import {uploadForm} from '@/api/upload'
 import store from "../../store";
 import {changePassword, updateUserInfo} from "../../api/login";
+
   export default {
   name: 'hello',
   data () {
@@ -236,6 +206,12 @@ import {changePassword, updateUserInfo} from "../../api/login";
     },
     open2(){
       this.dialogVisible3 = true
+    },
+    open3() {
+      this.$router.push({path:'/pms/product'})
+    },
+    open4() {
+      this.$router.push({path:'/pms/addProduct'})
     },
     changePhoneNumber() {
       console.log(this.emailImportForm)

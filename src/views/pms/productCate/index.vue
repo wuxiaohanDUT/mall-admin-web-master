@@ -34,36 +34,48 @@
                 :data="list"
                 style="width: 100%;"
                 v-loading="listLoading" >
-        <el-table-column label="工单类型" width="150" align="center">
+        <el-table-column label="工单类型" width="110" align="center">
           <template slot-scope="scope">{{scope.row.formTypeDes}}</template>
         </el-table-column>
-        <el-table-column label="申请人名称" width="150" align="center">
+        <el-table-column label="申请人名称" width="110" align="center">
           <template slot-scope="scope">{{scope.row.applicantName}}</template>
         </el-table-column>
-        <el-table-column label="申请人ID" width="150" align="center">
+        <el-table-column label="申请人ID" width="110" align="center">
           <template slot-scope="scope">{{scope.row.applicantId}}</template>
         </el-table-column>
-        <el-table-column label="工单状态" width="150" align="center">
+        <el-table-column label="工单状态" width="110" align="center">
           <template slot-scope="scope">{{scope.row.formStatusDescription}}</template>
         </el-table-column>
-        <el-table-column label="申请时间" width="150" align="center">
+        <el-table-column label="申请时间" width="110" align="center">
           <template slot-scope="scope">{{scope.row.submitTime}}</template>
         </el-table-column>
-        <el-table-column label="审核时间" width="150" align="center">
+        <el-table-column label="审核时间" width="110" align="center">
           <template slot-scope="scope">{{scope.row.passTime}}</template>
         </el-table-column>
-        <el-table-column label="审核人名称" width="150" align="center">
+        <el-table-column label="审核人名称" width="110" align="center">
           <template slot-scope="scope">{{scope.row.reviewerName}}</template>
         </el-table-column>
-        <el-table-column label="审核人ID" width="150" align="center">
+        <el-table-column label="审核人ID" width="110" align="center">
           <template slot-scope="scope">{{scope.row.reviewerId}}</template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" width="400" align="center">
           <template slot-scope="scope">
             <el-button
               size="mini"
-              type="success"
+              type="primary"
               @click="getDetail(scope.$index)">查看详情</el-button>
+            <el-button
+              size="mini"
+              type="success"
+              @click="pass(scope.$index)">通过</el-button>
+            <el-button
+              size="mini"
+              type="danger"
+              @click="reject(scope.$index)">拒绝</el-button>
+            <el-button
+              size="mini"
+              type="warning"
+              @click="revert(scope.$index)">撤销</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -80,15 +92,46 @@
         :total="total">
       </el-pagination>
     </div>
+    <el-dialog title="科创项目详细信息" :visible.sync="dialogVisible1" width="70%" >
+      <el-descriptions class="margin-top"  border>
+        <el-descriptions-item v-if=" type == 0" label="项目名称">{{ this.detail.awardType}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 0" label="项目参与者">{{this.detail.participantNames.join(" ")}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 0" label="获奖级别">{{this.detail.awardLevel}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 0" label="获奖时间">{{ this.detail.achieveTime.slice(0, 10)}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 0" label="指导老师">{{ this.detail.instructorNames }}</el-descriptions-item>
+      </el-descriptions>
+      <el-divider></el-divider>
+      <h3>证明材料</h3>
+      <el-card title="图片" class="block" >
+        <el-image v-for="url in imgs" :key="url" :src="url" style="width: 200px; height: 200px" :preview-src-list="imgs">
+        </el-image>
+      </el-card>
+    </el-dialog>
+    <el-dialog title="科研论文详细信息" :visible.sync="dialogVisible2" width="70%">
+      <el-descriptions class="margin-top"  border>
+        <el-descriptions-item v-if=" type == 1" label="论文名称">{{ this.detail.paperName}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 1" label="项目参与者">{{this.detail.authorNames.join(" ")}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 1" label="发表期刊">{{this.detail.publicationPeriodical}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 1" label="获奖时间">{{ this.detail.publicationTime.slice(0, 10)}}</el-descriptions-item>
+        <el-descriptions-item v-if=" type == 1" label="收录期刊">{{ this.detail.collection }}</el-descriptions-item>
+      </el-descriptions>
+      <el-divider></el-divider>
+      <h3>证明材料</h3>
+      <el-card title="图片" class="block" >
+        <el-image v-for="url in imgs" :key="url" :src="url" style="width: 200px; height: 200px" :preview-src-list="imgs">
+        </el-image>
+      </el-card>
+    </el-dialog>
   </div>
 </template>
 <script>
 import {fetchList, updateStatus, deleteFlash, createFlash, updateFlash} from '@/api/flash';
 import {formatDate} from '@/utils/date';
 import {getRuleByTypeName} from "../../../api/type";
-import {getFormList} from "../../../api/form";
+import {agreeForm, deleteForm, getFormList, rejectForm} from "../../../api/form";
 import {getPaperDetail, getProjectDetail} from "../../../api/project";
 import {getFormImg} from "../../../api/upload";
+import store from "../../../store";
 const defaultListQuery = {
   pageNum: 1,
   pageSize: 5,
@@ -107,20 +150,35 @@ export default {
   name: 'flashPromotionList',
   data() {
     return {
+      userId: null,
       listQuery: Object.assign({}, defaultListQuery),
       list: null,
       total: null,
-      listLoading: false,
-      dialogVisible: false,
+      listLoading: true,
       flashPromotion: Object.assign({}, defaultFlashPromotion),
       isEdit: false,
       applicantId: null,
       reviewerId: null,
-      detail: null,
-      imgs: null,
+      detail: {
+        awardType:'',
+        participantNames: [],
+        awardLevel: '',
+        achieveTime: '',
+        instructorNames: '',
+        paperName:'',
+        collection:'',
+        publicationTime:'',
+        publicationPeriodical:'',
+        authorNames:[],
+      },
+      imgs: [],
+      dialogVisible1: false,
+      dialogVisible2: false,
+      type:'',
     }
   },
   created() {
+    this.userId = store.getters.userId;
     this.getList();
   },
   filters: {
@@ -240,7 +298,8 @@ export default {
     getList() {
       this.listLoading = true;
       console.log(this.listQuery);
-      getFormList(this.listQuery.applicantId, this.listQuery.reviewerId, this.listQuery.pageNum, this.listQuery.pageSize).then(res => {
+      getFormList(this.listQuery.applicantId, this.listQuery.reviewerId, this.listQuery.pageNum, this.listQuery.pageSize,
+      false, false, false, false, false).then(res => {
         this.listLoading = false;
         this.list = res.data.data;
         for (let i = 0; i < this.list.length; i++) {
@@ -253,7 +312,7 @@ export default {
           const h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
           const m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
           // const s = date.getSeconds(); // 秒
-          const dateString = Y + M + D + h + m;
+          const dateString = Y + M + D;
           // console.log('dateString', dateString); // > dateString 2021-07-06 14:23
           this.list[i].submitTime = dateString
           if (this.list[i].passTime != null) {
@@ -263,7 +322,7 @@ export default {
             const D1 = (date1.getDate() < 10 ? '0' + date1.getDate() : date1.getDate()) + '  ';
             const h1 = (date1.getHours() < 10 ? '0' + date1.getHours() : date1.getHours()) + ':';
             const m1 = (date1.getMinutes() < 10 ? '0' + date1.getMinutes() : date1.getMinutes());
-            this.list[i].passTime = Y1 + M1 + D1 + h1 + m1
+            this.list[i].passTime = Y1 + M1 + D1
           }
         }
       })
@@ -271,7 +330,7 @@ export default {
     getDetail(index) {
       let formId = this.list[index].formId
       let type = this.list[index].formType
-      console.log(formId)
+      this.type = type
       getFormImg(formId).then(res => {
         if (res.data.success) {
           this.imgs = res.data.data
@@ -281,17 +340,65 @@ export default {
         getProjectDetail(formId).then(res => {
           if (res.data.success) {
             this.detail = res.data.data
+            this.dialogVisible1 = true
           }
         })
       } else {
         getPaperDetail(formId).then(res => {
           if (res.data.success) {
             this.detail = res.data.data
+            this.dialogVisible2 = true
           }
         })
       }
-      console.log(this.detail)
-      console.log(this.imgs)
+      },
+    pass(index) {
+      let formId = this.list[index].formId
+      let formStatus = this.list[index].formStatus
+      if(formStatus == '0') {
+        agreeForm(formId, this.userId).then(res => {
+          if (res.data.success) {
+            this.$message.success('操作成功')
+            this.getList();
+          } else {
+            this.$message.error('操作失败')
+          }
+        })
+      } else {
+        this.$message.error('只能通过待审核状态的工单')
+      }
+    },
+    revert(index) {
+      let formId = this.list[index].formId
+      let formStatus = this.list[index].formStatus
+      if (formStatus == '1') {
+        deleteForm(formId, this.userId).then(res => {
+          if (res.data.success) {
+            this.$message.success('操作成功')
+            this.getList();
+          } else {
+            this.$message.error('操作失败')
+          }
+        })
+      } else {
+        this.$message.error('只能撤销审核通过的工单')
+      }
+    },
+    reject(index) {
+      let formId = this.list[index].formId
+      let formStatus = this.list[index].formStatus
+      if(formStatus == '0') {
+        rejectForm(formId, this.userId).then(res => {
+          if (res.data.success) {
+            this.$message.success('操作成功')
+            this.getList();
+          } else {
+            this.$message.error('操作失败')
+          }
+        })
+      } else {
+        this.$message.error('只能拒绝待审核状态的工单')
+      }
     }
   }
 }
